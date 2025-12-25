@@ -9,11 +9,9 @@ contract DeployTrap is Script {
     function run() external {
         vm.startBroadcast();
 
-        // Deploy Response Contract
         RepeatedSenderResponder responder = new RepeatedSenderResponder();
         console.log("Responder deployed at:", address(responder));
 
-        // Deploy Trap Contract
         RepeatedSenderTrap trap = new RepeatedSenderTrap();
         console.log("Trap deployed at:", address(trap));
 

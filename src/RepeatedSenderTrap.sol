@@ -11,30 +11,43 @@ interface IHoodiBlockTxs {
 }
 
 contract RepeatedSenderTrap is ITrap {
+    // Placeholder until Hoodi tx reader is deployed
     address constant HOODI_TX_READER =
         0x0000000000000000000000000000000000000000;
 
-    // Replace with real Hoodi tx reader address once provided (dummy placeholder)
-
     function collect() external view override returns (bytes memory) {
-        IHoodiBlockTxs reader = IHoodiBlockTxs(HOODI_TX_READER);
-        address[] memory senders = reader.getBlockTxSenders(block.number, 5);
-        return abi.encode(senders);
+        address r = HOODI_TX_READER;
+        if (r == address(0)) return bytes("");
+
+        uint256 size;
+        assembly {
+            size := extcodesize(r)
+        }
+        if (size == 0) return bytes("");
+
+        try IHoodiBlockTxs(r).getBlockTxSenders(block.number, 5) returns (
+            address[] memory senders
+        ) {
+            return abi.encode(senders);
+        } catch {
+            return bytes("");
+        }
     }
 
     function shouldRespond(
         bytes[] calldata data
     ) external pure override returns (bool, bytes memory) {
-        if (data.length == 0 || data[0].length == 0) return (false, bytes(""));
+        if (data.length == 0 || data[0].length == 0) {
+            return (false, bytes(""));
+        }
 
         address[] memory senders = abi.decode(data[0], (address[]));
-
-        // Count duplicates
         uint256 len = senders.length;
+
         for (uint256 i = 0; i < len; i++) {
             if (senders[i] == address(0)) continue;
-            uint256 count = 1;
 
+            uint256 count = 1;
             for (uint256 j = i + 1; j < len; j++) {
                 if (senders[i] == senders[j]) {
                     count++;
