@@ -15,6 +15,7 @@ contract RepeatedSenderTrap is ITrap {
     address constant HOODI_TX_READER =
         0x0000000000000000000000000000000000000000;
 
+    /// @notice Collects sender addresses from Hoodi tx reader or returns empty if not deployed
     function collect() external view override returns (bytes memory) {
         address r = HOODI_TX_READER;
         if (r == address(0)) return bytes("");
@@ -34,6 +35,7 @@ contract RepeatedSenderTrap is ITrap {
         }
     }
 
+    /// @notice Checks for repeated senders in collected data
     function shouldRespond(
         bytes[] calldata data
     ) external pure override returns (bool, bytes memory) {

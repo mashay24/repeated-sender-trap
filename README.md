@@ -2,126 +2,75 @@
 
 ## Overview
 
-**RepeatedSenderTrap** is a proof-of-concept (PoC) trap designed for the **Drosera network**. It detects repeated senders in recent transactions on a blockchain sample (mocked for testing).
+**RepeatedSenderTrap** is a proof-of-concept (PoC) trap for the **Drosera network**, detecting repeated senders in recent transactions.
 
-The trap works as follows:
+### Behavior
 
-1. `collect()` gathers a small array of addresses (simulating recent transaction senders).
-2. `shouldRespond()` checks for any address appearing **3 or more times** in the collected sample.
-3. If a repeated sender is found, the trap triggers a response via the **RepeatedSenderResponder** contract, emitting an alert event.
+1. `collect()` attempts to gather addresses from a Hoodi tx reader.
 
-This trap is fully **Drosera-compatible**, stateless, and deterministic, making it ready for deployment on the **Hoodi testnet**.
+   * Gracefully handles missing reader; returns empty bytes until reader is deployed.
+2. `shouldRespond()` detects addresses appearing **3 or more times**.
+3. If a repeated sender is found, **RepeatedSenderResponder** emits an alert.
 
 ---
 
 ## Features
 
-* **Drosera Compatible**: Implements the `ITrap` interface with `collect()` and `shouldRespond()`.
-* **Stateless & Pure**: No storage or external dependencies — deterministic behavior.
-* **Test-Friendly**: Uses hardcoded addresses for immediate testing; can later integrate with a real Hoodi tx reader.
-* **Event-Driven**: Alerts are emitted via a dedicated responder contract.
-* **Simple & Lightweight**: Minimal gas usage and easy to extend for real network integration.
+* **Drosera Compatible**: Implements `ITrap` interface.
+* **Stateless & Pure**: No storage; deterministic behavior.
+* **Test-Friendly**: Returns empty until reader deployed.
+* **Event-Driven**: Alerts emitted via responder contract.
+* **Safe & Lightweight**: Minimal gas, deploy-ready.
 
 ---
 
 ## Contracts
 
-### 1. `RepeatedSenderTrap.sol`
-
-* Implements `ITrap` interface.
-* `collect()`: Returns a fixed array of addresses (memory).
-* `shouldRespond(bytes[] calldata data)`: Checks for repeated addresses and returns a trigger signal if ≥3 repetitions exist.
-
-### 2. `RepeatedSenderResponder.sol`
-
-* Responds to the trap trigger by emitting:
-
-```solidity
-event RepeatedSenderAlert(address sender, uint256 count);
-```
-
-* Function:
-
-```solidity
-function respondWithRepeatedSenderAlert(address sender, uint256 count) external
-```
-
-* This payload is compatible with the Drosera relay response mechanism.
-
-### 3. `DeployTrap.s.sol`
-
-* Foundry deployment script that deploys both the trap and responder contracts on Hoodi.
-* Logs the deployed contract addresses for easy TOML configuration.
+1. `RepeatedSenderTrap.sol` — implements trap logic.
+2. `RepeatedSenderResponder.sol` — emits `RepeatedSenderAlert` when triggered.
+3. `DeployTrap.s.sol` — Foundry deployment script.
 
 ---
 
 ## Deployment
 
-1. Ensure **Foundry** is installed and configured.
-2. Set environment variables:
-
 ```bash
 export HOODI_RPC="https://ethereum-hoodi-rpc.publicnode.com"
 export PRIVATE_KEY="<your_test_private_key>"
-```
 
-3. Build the contracts:
-
-```bash
 forge build
-```
 
-4. Deploy to Hoodi testnet:
-
-```bash
 forge script script/DeployTrap.s.sol:DeployTrap \
     --rpc-url $HOODI_RPC \
     --private-key $PRIVATE_KEY \
     --broadcast
 ```
 
-* The script outputs the deployed **Trap** and **Responder** addresses.
-
 ---
 
-## Drosera TOML Example
+## Drosera TOML
 
 ```toml
-ethereum_rpc = "https://ethereum-hoodi-rpc.publicnode.com"
-drosera_rpc = "https://relay.hoodi.drosera.io"
-eth_chain_id = 560048
-drosera_address = "0x91cB447BaFc6e0EA0F4Fe056F5a9b1F14bb06e5D"
-
-[traps]
 [traps.repeated_sender]
 path = "out/RepeatedSenderTrap.sol/RepeatedSenderTrap.json"
-response_contract = "<RESPONDER_ADDRESS>"
+trap_contract = "0xa3c724233d90dE271b357e6919690f308fFd2Db7"
+response_contract = "0xfF38560436f3eB6869d926b942a94773F8f9254a"
 response_function = "respondWithRepeatedSenderAlert(address,uint256)"
 cooldown_period_blocks = 20
 min_number_of_operators = 1
 max_number_of_operators = 3
-block_sample_size = 5
+block_sample_size = 1
 private_trap = true
-whitelist = ["<YOUR_OPERATOR_ADDRESS>"]
+whitelist = ["0x43f89ee2ac9f93ed5e8913034bb9275630254d57"]
 ```
 
-> Replace `<RESPONDER_ADDRESS>` and `<YOUR_OPERATOR_ADDRESS>` with actual deployed addresses.
-
----
-
-## Usage
-
-1. Deploy contracts to Hoodi testnet.
-2. Submit the trap to Drosera relay using the TOML configuration.
-3. The relay calls `collect()` and `shouldRespond()` automatically.
-4. When a repeated sender is detected, `RepeatedSenderResponder` emits `RepeatedSenderAlert`.
+> Addresses updated to match your latest deployed contracts.
 
 ---
 
 ## Notes
 
-* Current version uses a **hardcoded address array** for demonstration/testing.
-* For real integration, `collect()` can fetch actual block transaction senders via a **Hoodi block reader contract**.
-* Designed to be **safe, deterministic, and minimal gas** to fit Drosera’s trap standards.
+* Currently uses a placeholder reader; `collect()` returns empty until deployed.
+* Safe, deterministic, minimal gas — ready for Drosera PoC.
 
 ---
