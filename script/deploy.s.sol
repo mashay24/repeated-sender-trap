@@ -12,7 +12,9 @@ contract DeployTrap is Script {
         RepeatedSenderResponder responder = new RepeatedSenderResponder();
         console.log("Responder deployed at:", address(responder));
 
-        RepeatedSenderTrap trap = new RepeatedSenderTrap();
+        // For PoC: address(0)
+        // For real deployment: actual HOODI_TX_READER address
+        RepeatedSenderTrap trap = new RepeatedSenderTrap(address(0));
         console.log("Trap deployed at:", address(trap));
 
         vm.stopBroadcast();

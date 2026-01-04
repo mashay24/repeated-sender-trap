@@ -5,8 +5,8 @@ drosera_address = "0x91cB447BaFc6e0EA0F4Fe056F5a9b1F14bb06e5D"
 
 [traps.repeated_sender]
 path = "out/RepeatedSenderTrap.sol/RepeatedSenderTrap.json"
-trap_contract = "0xa3c724233d90dE271b357e6919690f308fFd2Db7"
-response_contract = "0xfF38560436f3eB6869d926b942a94773F8f9254a"
+trap_contract = "0xA8625B0f1c7A8b42c928308aB7ed78f739b18F06"
+response_contract = "0x4FFA9bbaB1F6d4C2999523aC1715185a02606275"
 response_function = "respondWithRepeatedSenderAlert(address,uint256)"
 cooldown_period_blocks = 20
 min_number_of_operators = 1

@@ -11,13 +11,17 @@ interface IHoodiBlockTxs {
 }
 
 contract RepeatedSenderTrap is ITrap {
-    // Placeholder until Hoodi tx reader is deployed
-    address constant HOODI_TX_READER =
-        0x0000000000000000000000000000000000000000;
+    /// @notice Hoodi transaction reader (can be zero for PoC)
+    address public immutable hoodiTxReader;
 
-    /// @notice Collects sender addresses from Hoodi tx reader or returns empty if not deployed
+    constructor(address _hoodiTxReader) {
+        hoodiTxReader = _hoodiTxReader;
+    }
+
+    /// @notice Collects sender addresses from Hoodi tx reader
+    /// @dev Gracefully returns empty bytes if reader is unset or invalid
     function collect() external view override returns (bytes memory) {
-        address r = HOODI_TX_READER;
+        address r = hoodiTxReader;
         if (r == address(0)) return bytes("");
 
         uint256 size;
@@ -47,17 +51,18 @@ contract RepeatedSenderTrap is ITrap {
         uint256 len = senders.length;
 
         for (uint256 i = 0; i < len; i++) {
-            if (senders[i] == address(0)) continue;
+            address current = senders[i];
+            if (current == address(0)) continue;
 
             uint256 count = 1;
             for (uint256 j = i + 1; j < len; j++) {
-                if (senders[i] == senders[j]) {
+                if (current == senders[j]) {
                     count++;
                 }
             }
 
             if (count >= 3) {
-                return (true, abi.encode(senders[i], count));
+                return (true, abi.encode(current, count));
             }
         }
 
